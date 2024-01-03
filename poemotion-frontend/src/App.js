@@ -23,7 +23,8 @@ function App() {
       websocket.close();
     }
 
-    const ws = new WebSocket("ws://localhost:5001");
+    console.log(process.env)
+    const ws = new WebSocket(`ws://${process.env.REACT_APP_BACKEND_URL_HOST}:${process.env.REACT_APP_BACKEND_URL_PORT}`);
 
     ws.onopen = () => {
       console.log("Connected to the server");
@@ -78,6 +79,7 @@ function App() {
     
     // generateText()
     setMessages([]);
+    setEmotionData(null)
     connectWebSocket(prompt);
   };
 
@@ -106,7 +108,7 @@ function App() {
           
         </div>
         <div className="w-full basis-1/2">
-        {emotionData && <EmotionPiechart emotionData={emotionData} />}
+        {(emotionData !== null)  && <EmotionPiechart emotionData={emotionData} />}
         </div>
         </div>
         </motion.div>

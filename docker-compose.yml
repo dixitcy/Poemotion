@@ -8,6 +8,8 @@ services:
       - "5001:5001" # Map container port to host port
     environment:
       - NODE_ENV=development # Set environment variables if required
+    env_file:
+      - ./.env-shared
     # Add any additional configurations like volumes, networks, etc., if needed
 
   frontend:
@@ -15,4 +17,6 @@ services:
       context: ./poemotion-frontend
     ports:
       - "3000:3000" # Map container port to host port
+    env_file:
+      - ./.env-shared
     # Add any additional configurations like volumes, networks, etc., if needed

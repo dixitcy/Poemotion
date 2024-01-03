@@ -24,6 +24,14 @@ const parseEmotionData = (emotionData) => {
   }));
 };
 
+const CustomLabelLine = ({ points, value }) => {
+  if (value === 0) {
+    return null;
+  }
+
+  return <polyline points={points.map(p => p.x + ',' + p.y).join(' ')} stroke="#666" fill="none"/>;
+};
+
 const CustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, index, name, value }) => {
   if (value === 0) {
     return null;
@@ -59,6 +67,7 @@ export default class EmotionPiechart extends PureComponent {
             cy="50%"
             outerRadius={80}
             label={CustomLabel}
+            labelLine={CustomLabelLine}  // Use custom label line
           >
             {
               chartData.map((entry, index) => (
