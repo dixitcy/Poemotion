@@ -1,18 +1,18 @@
--version: '3'
+version: '3'
 
 services:
   backend:
     build:
       context: ./poemotion-backend
     ports:
-      - "3000:3000" # Map container port to host port
+      - "5001:5001" # Map container port to host port
     environment:
-      - NODE_ENV=production # Set environment variables if required
+      - NODE_ENV=development # Set environment variables if required
     # Add any additional configurations like volumes, networks, etc., if needed
 
   frontend:
     build:
       context: ./poemotion-frontend
     ports:
-      - "80:80" # Map container port to host port
+      - "3000:3000" # Map container port to host port
     # Add any additional configurations like volumes, networks, etc., if needed

@@ -1,9 +1,9 @@
 require("dotenv").config();
 const OpenAI = require("openai");
 
-console.log(`process.env.OPENAI_API_KEY`, process.env.OPENAI_API_KEY)
+console.log(`process.env.OPENAI_API_KEY`, process.env.OPENAI_API_KEY);
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
+  apiKey: process.env.OPENAI_API_KEY,
 });
 const cors = require("cors"); // Import the cors middleware
 
@@ -22,12 +22,9 @@ app.use(express.json());
 
 const wss = new WebSocket.Server({ server }); // Attach WebSocket to the server
 
-
 app.get("/", (req, res) => {
   res.send("Hello World!");
 });
-
-
 
 app.post("/generate-count", async (req, res) => {
   console.log(`generate-count api`);
@@ -38,8 +35,7 @@ app.post("/generate-count", async (req, res) => {
         messages: [
           {
             role: "user",
-            content:
-              "Write a small poem about singing in the bathroom",
+            content: "Write a small poem about singing in the bathroom",
           },
         ],
         model: "gpt-3.5-turbo",
@@ -55,38 +51,40 @@ app.post("/generate-count", async (req, res) => {
       }
     );
 
-    
-
     const sseClient = res;
 
     // Function to send data to the SSE client
     const sendToClient = (chunkMessage) => {
       if (chunkMessage) {
-        console.log(`chunkMessage`, chunkMessage)
+        console.log(`chunkMessage`, chunkMessage);
         sseClient.write(`data: ${chunkMessage}\n\n`);
       }
     };
 
     // Continuously send data to the SSE client as it arrives
-    let mainMessage = ''
+    let mainMessage = "";
 
     completion.data.on("data", (chunk) => {
       // Convert the binary chunk to a string
       const chunkMessage2 = chunk.toString().trim();
-    
+
       // Check if the chunk starts with "data:"
       if (chunkMessage2.startsWith("data:")) {
         // Extract the JSON part after "data:"
         const jsonData = chunkMessage2.substring("data:".length);
 
-        console.log(`jsonData`, jsonData)
-        console.log(`jsonData`, jsonData)
-    
+        console.log(`jsonData`, jsonData);
+        console.log(`jsonData`, jsonData);
+
         try {
           const chunkData = JSON.parse(jsonData);
 
-          console.log(`chunkData`, chunkData)
-          if (chunkData.choices && chunkData.choices[0].delta && chunkData.choices[0].delta.content) {
+          console.log(`chunkData`, chunkData);
+          if (
+            chunkData.choices &&
+            chunkData.choices[0].delta &&
+            chunkData.choices[0].delta.content
+          ) {
             const content = chunkData.choices[0].delta.content;
             if (content) {
               console.log(`Received content:`, content);
@@ -102,7 +100,7 @@ app.post("/generate-count", async (req, res) => {
 
     // On completion of streaming, close the response stream
     completion.data.on("end", () => {
-      console.log(`mainMessage`, mainMessage)
+      console.log(`mainMessage`, mainMessage);
       sseClient.end();
     });
   } catch (error) {
@@ -116,97 +114,119 @@ app.post("/generate-text", async (req, res) => {
   try {
     const { prompt } = req.body;
 
-    
-
     const completion = await openai.chat.completions.create({
       messages: [
         { role: "system", content: "You are a helpful assistant." },
-        { role: "user", content: "Write a small poem about singing in the bathroom" },
+        {
+          role: "user",
+          content: "Write a small poem about singing in the bathroom",
+        },
       ],
       model: "gpt-3.5-turbo",
       max_tokens: 20,
-      stream: true
+      stream: true,
     });
 
-    
     console.log(completion.toString());
 
-            // Set headers for SSE
-            res.writeHead(200, {
-              'Content-Type': 'text/event-stream',
-              'Cache-Control': 'no-cache',
-              'Connection': 'keep-alive',
-          });
+    // Set headers for SSE
+    res.writeHead(200, {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+      Connection: "keep-alive",
+    });
 
-
-        // Iterate through the stream of events
-        for await (const chunk of completion) {
-          // Handle each chunk
-          console.log("chunk");
-          console.log(chunk);
-          const message = chunk.choices[0].delta;
-          if (message) {
-              console.log("message");
-              console.log(message);
-              console.log(message.content);
-              res.write(`data: ${JSON.stringify(message.content)}\n\n`);
-
-          }
+    // Iterate through the stream of events
+    for await (const chunk of completion) {
+      // Handle each chunk
+      console.log("chunk");
+      console.log(chunk);
+      const message = chunk.choices[0].delta;
+      if (message) {
+        console.log("message");
+        console.log(message);
+        console.log(message.content);
+        res.write(`data: ${JSON.stringify(message.content)}\n\n`);
       }
-
+    }
   } catch (error) {
     console.log(`error with openai chat completion api`);
     res.status(500).json({ error: "Failed to generate text." });
   }
 });
 
+wss.on("connection", (ws) => {
+  console.log("Client connected");
 
-wss.on('connection', (ws) => {
-  console.log('Client connected');
+  ws.on("message", async (message) => {
+    console.log("Received message:", message);
 
-  ws.on('message', async (message) => {
-      console.log('Received message:', message);
-      
-      // Parse the received message as JSON
-      const { prompt } = JSON.parse(message);
+    // Parse the received message as JSON
+    const { prompt } = JSON.parse(message);
 
-      console.log("prompt")
-      console.log(prompt)
+    console.log("prompt");
+    console.log(prompt);
 
-      // Call OpenAI API
-      try {
-          const completion = await openai.chat.completions.create({
-              messages: [
-                  { role: "system", content: "You are a helpful assistant." },
-                  { role: "user", content: prompt },
-              ],
-              model: "gpt-3.5-turbo",
-              max_tokens: 100,
-              stream: true
-          });
+    // Call OpenAI API
+    try {
+      const completion = await openai.chat.completions.create({
+        messages: [
+          { role: "system", content: "You are a helpful assistant." },
+          { role: "user", content: prompt },
+        ],
+        model: "gpt-3.5-turbo",
+        max_tokens: 100,
+        stream: true,
+      });
 
-          console.log("completion")
-          console.log(completion)
+      console.log("completion");
+      console.log(completion);
 
-          for await (const chunk of completion) {
-            console.log(`chunk`)
-            console.log(chunk)
-              const content = chunk.choices[0].delta?.content;
-              if (content) {
-                console.log('content')
-                console.log(chunk.choices[0].delta)
-                console.log(content)
-                  ws.send(content);
-              }
-          }
-      } catch (error) {
-          console.error('Error with OpenAI chat completion:', error);
-          ws.send(JSON.stringify({ error: "Failed to generate text." }));
+      let generatedText = "";
+
+      for await (const chunk of completion) {
+        console.log(`chunk`);
+        console.log(chunk);
+        const content = chunk.choices[0].delta?.content;
+        if (content) {
+          console.log("content");
+          console.log(chunk.choices[0].delta);
+          console.log(content);
+          generatedText += content;
+
+          // ws.send(content);
+          ws.send(JSON.stringify({ type: "generatedText", content: content }));
+        }
       }
+        // Emotion Analysis using Twinword API
+        const encodedParams = new URLSearchParams();
+        encodedParams.set('text', generatedText);
+
+        const options = {
+            method: 'POST',
+            url: 'https://twinword-emotion-analysis-v1.p.rapidapi.com/analyze/',
+            headers: {
+                'content-type': 'application/x-www-form-urlencoded',
+                'X-RapidAPI-Key': '059a7106e7msh5cf40afc19d999dp16c3a7jsn505d229be5f1',
+                'X-RapidAPI-Host': 'twinword-emotion-analysis-v1.p.rapidapi.com'
+            },
+            data: encodedParams
+        };
+
+        const emotionResponse = await axios.request(options);
+        console.log("Emotion Analysis: ", emotionResponse.data);
+
+        // Send the emotion analysis to the WebSocket client
+        ws.send(JSON.stringify({ type: "emotionAnalysis", content: emotionResponse.data }));
+
+    } catch (error) {
+      console.error("Error with OpenAI chat completion:", error);
+      ws.send(JSON.stringify({ error: "Failed to generate text." }));
+    }
   });
 
-  ws.on('close', () => {
-      console.log('Client disconnected');
+  ws.on("close", () => {
+    console.log("Client disconnected");
   });
 });
 

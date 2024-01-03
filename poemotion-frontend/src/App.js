@@ -10,6 +10,8 @@ function App() {
   const [x, setX] = useState(0);
   const [y, setY] = useState(0);
   const [rotate, setRotate] = useState(0);
+  const [emotionData, setEmotionData] = useState(null);
+
 
   const [messages, setMessages] = useState([]); // Ensure this line is present
   const [websocket, setWebsocket] = useState(null); // Ensure this line is present
@@ -35,8 +37,24 @@ function App() {
 
     ws.onmessage = (event) => {
       console.log("new message");
-      console.log(event.data);
-      setMessages((prev) => prev + event.data);
+      console.log(event);
+      let data = JSON.parse(event.data)
+      console.log(data)
+      // console.log(typeof(event.data))
+      
+      if (data.type == "emotionAnalysis") {
+        console.log("emotionAnalysis")
+        console.log(data.content)
+        // const data = JSON.parse(data.data);
+        console.log(data)
+        // const contentJson = JSON.parse(data.emotionAnalysis.content);
+
+        // console.log(contentJson)
+
+          setEmotionData(data.content); // Update state with emotion data
+      } else {
+          setMessages((prev) => prev + data.content); // Handle other messages
+      }
       // ws.send(JSON.stringify({ prompt: prompt }));
     };
 
@@ -88,7 +106,7 @@ function App() {
           
         </div>
         <div className="w-full basis-1/2">
-        <EmotionPiechart />
+        {emotionData && <EmotionPiechart emotionData={emotionData} />}
         </div>
         </div>
         </motion.div>
