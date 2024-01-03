@@ -198,6 +198,8 @@ wss.on("connection", (ws) => {
           ws.send(JSON.stringify({ type: "generatedText", content: content }));
         }
       }
+
+      ws.send(JSON.stringify({ type: "poemFinished"}));
         // Emotion Analysis using Twinword API
         const encodedParams = new URLSearchParams();
         encodedParams.set('text', generatedText);

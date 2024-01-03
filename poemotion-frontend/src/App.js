@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import Prompt from "./components/Prompt";
 import { Input } from "./components/Input";
 import EmotionPiechart from "./components/EmotionPiechart";
+import LoadingSpinner from "./components/LoadingSpinner";
 
 function App() {
   const [x, setX] = useState(0);
@@ -16,6 +17,7 @@ function App() {
   const [messages, setMessages] = useState([]); // Ensure this line is present
   const [websocket, setWebsocket] = useState(null); // Ensure this line is present
   const [expanded, setExpanded] = useState(false);
+  const [poemFinished, setPoemFinished] = useState(false);
 
   const connectWebSocket = (prompt) => {
     // Close existing connection if any
@@ -53,6 +55,8 @@ function App() {
         // console.log(contentJson)
 
           setEmotionData(data.content); // Update state with emotion data
+      } else if (data.type == "poemFinished"){
+        setPoemFinished(true); // Update state with emotion data
       } else {
           setMessages((prev) => prev + data.content); // Handle other messages
       }
@@ -109,6 +113,7 @@ function App() {
         </div>
         <div className="w-full basis-1/2">
         {(emotionData !== null)  && <EmotionPiechart emotionData={emotionData} />}
+        {((emotionData == null) && poemFinished) && <LoadingSpinner />}
         </div>
         </div>
         </motion.div>

@@ -138,7 +138,7 @@ const Example = ({
       className={`absolute p-4 z-10 ${
         expanded
           ? "items-start w-full"
-          : "max-w-screen-md mx-auto h-full"
+          : "max-w-screen-md mx-auto"
       }`}
       initial={{ 
         width: "50%",
